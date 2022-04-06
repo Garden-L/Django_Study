@@ -6,7 +6,7 @@ class Question(models.Model):
     create_date = models.DateTimeField()    #작성일시
     
     def __str__(self):
-        return self.subject
+        return self.content
     
 class Answer(models.Model):
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
