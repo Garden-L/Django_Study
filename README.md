@@ -1,5 +1,95 @@
 # Django_Study
 
+## 파일구조
+* ProjectName/
+    * conf/
+        * \_\_init\_\_.py
+        * settings.py
+        * urls.py
+        * wsgi.py
+    * app1
+        * \_\_init\_\_.py
+        * settings.py
+        * urls.py
+        * wsgi.py
+    * app2
+    * manage.py
+    * sqlite3
+
+### 예시
+```code
+$ django-admin startproject conf . //현재 디렉토리에 프로젝트 생성, 기본세팅은 conf 디렉토리에서 수행
+```
+
+* DatabaseSchool/
+    * conf/
+        * \_\_init\_\_.py 
+        * asgi.py
+        * settings.py
+        * urls.py #url 연결파일
+        * wsgi.py
+    * manage.py
+
+<br></br>
+
+## Templates
+```python
+BASE_DIR = Path(__file__).resolve().parent.parent  #프로젝트 파일의 절대값 c:\...\DatabaseSchool
+
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates', # 템플릿 엔진 설정 : Django는 기본적으로 Jinja2 지원
+        'DIRS': [os.path.join(BASE_DIR, 'templates')], # 템플릿을 담을 경로 설정, 여러 경로 등록 시 리스트 순서대로 템플릿을 탐색
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+            ],
+        },
+    },
+]
+```
+
+## URL
+### url경로
+사용자가 locallhost:8000/account 요청
+conf/url.py 파일에서 account경로 확인, 특정앱으로 이동시키려면 include(app이름)
+```python
+from django.urls import path, include
+
+extra_urlpatterns =[
+    path('file/', views.path)
+]
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('account/', include('account.urls')) #account/urls.py 파일로 이동
+    path('extra/, include(extra_urlpatterns)) #리스트 변수가능
+    path('list/, include([path('page1', views.page1) , path('page2', views.page2)]) #리스트 값 자체로 넣는 것 또한 가능
+]
+```
+
+## 로그인 구현 (User 상속 받지 않고 구현)
+```code
+$ django-admin startapp account //계정 관리 app 생성, 
+
+DatabaseSchool/
+    conf/
+    account/
+        migrations/ #데이터베이스의 관한 기록관리- DB만 전용으로하는 github 기능
+            __init__.py
+        __init__.py 
+        admin.py
+        apps.py
+        models.py #테이블 생성 등 데이터베이스 관한 처리
+        tests.py
+        views.py #파싱에관한것
+        urls.py #사용자가 직접생성, 계정에 관한 모든 url 연결은 conf에서 account로 넘기게 함
+    manage.py
+```
 ## Views
 
 ### Views 가이드라인
