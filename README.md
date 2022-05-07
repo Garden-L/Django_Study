@@ -52,6 +52,24 @@ TEMPLATES = [
     },
 ]
 ```
+## App
+Django에서는 각 등록된 앱에 대한 다양한 명령어 (makemigrations, migrate 등) 실행 하려면 conf/setting.py 파일 INSTALLED_APPS에 설치한 앱의 'app이름'Config 클래스를 등록하여야 한다.
+
+```python
+$ django-admin startapp account #account 앱을 생성
+
+#setting.py
+INSTALLED_APPS = [
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'account.apps.AccountConfig', #AccountConfig 클래스 등록, AccountConfig클래스 내부에 name 멤버변수 값이 설정됨
+]
+```
+
 
 ## URL
 ### url경로
@@ -125,6 +143,47 @@ def index(request):
   * 중복되는 코드가 생길 가능성이 매우 높다. 
   * 코드의 재사용이 어렵다.
 
+## Models
+```python
+# user 데이터베이스 모델 생성과정
+
+class User(models.Model): #모델생성시 복수형태로 쓰지 않음
+   name = models.CharField(max_length) #최대 Max_legnth까지 문자 저장가능 -> TextInput 폼 
+        = models.TextField() # Django docs에서도 방대한 text는 textfield 이용하길 권장
+   
+   class Meta:
+      db_table = "user" #이 설정을 안하면 table 이름이 ("app이름"_객체명)형태로 저장된다
+      ordering = ['name'] # 검색된 객체는 name순으로 오름차순으로 정렬된다 (내림차순은 "-name")
+      
+      
+$ python manage.py makemigrations #마이그레이션 생성- 단순히 기록용으로 생성 0001_~.py 
+$ python manage.py migrate #자동으로 마지막으로 생성된 마이그레이션을 데이터베이스에 등록한다. 실제 
+```
+
+* 장고는 모델생성시 자동으로 id 값을 부여한다. tuple을 추가할 때마다 자동생성
+
+### options
+#### choices
+```python
+#사용자가 선택하도록 models을 만들 때 choices로 제한 할 수 있음
+RES=( (1, '학생'), (2, '교수') )
+respon = models.CharField(max_lenght=2, choices=RES) 
+```
+
+#### unique
+똑같은 값이 들어가지 않도록 unique 제약조건을 설정
+```python
+email = models.CharField(max_length=50, unique=True)
+```
+#### unique
+필드를 primary key로 설정. primary key로 설정 시 장고에서 자동 생성해주는 id필드가 생성되지 않음
+```python
+jumin = models.IntegerField(primary_key=True) 
+
+#장고가 자동으로 등록해주는 id 값 필드 
+id = models.AutoFeild(primary_key=True) #자동증가 필드, 값을 추가 할 때마다 1씩 자동 증가
+```
+
 ## ORM(Object-Relation Mapping)
 객체(Object)와 관계형 데이터베이스(Relation)를 연결(Mapping)해주는 것을 의미한다.
 테이블과 객체를 연결- Student라는 이름을 가진 테이블은 Student 객체로 연결(Mapping), 장고에서 정확한 테이블 이름은 
@@ -146,3 +205,26 @@ for obj in query_set: #리스트 형태이기 때문에 반복문 사용가능
 <br></br>
 #### - table.objects.get(*args, **kwargs) == SELECT * FROM table where not (조건);
 예시 : table.object.get(id=10, grade=100) == SELECT * FROM table where not(id=10 and grade=100);
+
+## CBV
+### TemplateResponseMixin 클래스
+사용자 응답 관련 클래스 
+```python
+#멤버변수
+   template_name  #render할 template 위치
+   template_engin #render할때 사용할 engin
+   content_type   #context할 것
+```
+
+# python
+## dic
+key와 value의 조합으로 된 자료구조
+
+D = {"name":"LJW", }
+
+### get(key)
+```python
+print(D.get("name")) 
+#출력
+"LJW"
+```
