@@ -90,24 +90,7 @@ urlpatterns = [
 ]
 ```
 
-## 로그인 구현 (User 상속 받지 않고 구현)
-```code
-$ django-admin startapp account //계정 관리 app 생성, 
 
-DatabaseSchool/
-    conf/
-    account/
-        migrations/ #데이터베이스의 관한 기록관리- DB만 전용으로하는 github 기능
-            __init__.py
-        __init__.py 
-        admin.py
-        apps.py
-        models.py #테이블 생성 등 데이터베이스 관한 처리
-        tests.py
-        views.py #파싱에관한것
-        urls.py #사용자가 직접생성, 계정에 관한 모든 url 연결은 conf에서 account로 넘기게 함
-    manage.py
-```
 ## Views
 
 ### Views 가이드라인
@@ -159,6 +142,8 @@ class User(models.Model): #모델생성시 복수형태로 쓰지 않음
 $ python manage.py makemigrations #마이그레이션 생성- 단순히 기록용으로 생성 0001_~.py 
 $ python manage.py migrate #자동으로 마지막으로 생성된 마이그레이션을 데이터베이스에 등록한다. 실제 
 ```
+### migrations 초기화
+데이터베이스를 초기화 시키고 싶으면 전체 앱의 migrations 폴더에서 \_\_init\_\_.py를 제외한 생성한 기록과 sqlite3를 사용하는 경우 db.sqlite3까지 모두 삭제한다.
 
 * 장고는 모델생성시 자동으로 id 값을 부여한다. tuple을 추가할 때마다 자동생성
 
@@ -215,6 +200,109 @@ for obj in query_set: #리스트 형태이기 때문에 반복문 사용가능
    template_engin #render할때 사용할 engin
    content_type   #context할 것
 ```
+# 로그인 구현 (AbstractBaseUser 상속)
+AbstractBaseUser를 상속하는 경우 Django의 인증 시스템은 사용하면서도 개발자가 직접 원하는 로그인 방식을 지정할 수 있다.
+
+## AbstractBaseUser
+AbstractBaseUser는 기본적으로 id, password, last_login 속성을 추가한다. 이때 id는 사용자가 직접 설정한 로그인할 때 쓰는 id가 아니라 장고에서 기본적으로 추가해주는 id이다. primary_key속성을 지정해주면 id속성을 만들지 않는다.
+
+### User 데이터베이스 구현예제
+```python 
+
+class User(AbstractBaseUser):
+    RESP=(
+        ('student', '학생'),
+        ('prof', '교수'),
+    )
+    
+    incomingid = models.CharField(max_length=10, unique=True)
+    password = models.CharField(max_length=50)
+    name = models.CharField(max_length=50)
+    email = models.CharField(max_length=50)
+    resp = models.CharField(max_length=20, choices=RESP)
+    is_staff = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    
+    USERNAME_FIELD = 'incomingid'
+    EMAIl_FIELD = 'email'
+    REQUIRED_FIELDS =['name', 'email']
+    object = UserModel()
+    
+    class Meta:
+        db_table = "user"
+        
+    def __str__(self):
+        return self.name
+
+    def has_perm(self, a):
+        return True
+    
+    def has_module_perms(self, app_label):
+        return True
+
+```
+### USERNAME_FIELD 
+고유 식별자로 사용되는 자용자 모델의 필드 이름을 설명하는 문자열 사용자가 직접 백엔드를 다루지 않는 이상 unique한 값이여야 한다
+```python
+ incomingid = models.CharField(max_length=10, unique=True)
+```
+AbstractBaseUser의 get_username 함수로 속성값 가져온다.
+
+#### USERNAME_FEILD가 unique하지 않을 시
+
+```code
+$ python manage.py createsuperuser  #슈퍼유저생성
+
+#에러 출력
+   account.User: (auth.E003) 'User.name' must be unique because it is named as the 'USERNAME_FIELD'.
+```
+
+### EMAIL_FILED
+이메일 필드가 있을 시 설정한다. 
+AbstractBaseUser의 get_email_field_name 함수로 속성값을 가져온다.
+
+```python
+#Django AbstractBaseUser클래스 
+#위치 : from django.contrib.auth.models import AbstractBaseUser
+
+class AbstractBaseUser(models.Model):
+    password = models.CharField(_("password"), max_length=128)
+    last_login = models.DateTimeField(_("last login"), blank=True, null=True)
+    
+...(생략)
+```
+
+### REQUIRED_FIELDS
+유저생성시 꼭 입력 받아야하는 속성 값을 설정한다. USERNAME_FIELD와 password는 자동 추가 되므로 생략해야한다. 넣으면 오히려 문제가된다.
+
+### objects
+BaseUserManager 상속을 무조건 구현해야하며, User클래스에 설정해야한다.
+
+### admin과 연동
+직접 작성한 User모델을 admin에서 사용하고 싶으면 필수 등록 항목이있다
+
+#### is_staff 
+#### is_active
+#### has_perm(perm, obj=None):
+#### has_module_perms(app_label):
+#### has_perm과 has_module_perms 는 PermissionMixed를 상속받으면 여기에 구현하는 것이 맞음
+
+### BaseUserManager
+AbstractBaseUser를 상속받은 경우 BaseUserManager 또한 구현해야 한다.
+구현 필드가 장고의 디폴트 User와 다를경우
+create_user
+create_superuser 함수를 추가해야한다. 장고에서 유저를 생성할때 이 함수를 호출하는 듯
+AbstractBaseUser를 상속받은 클래스에 objects = BaseUserManager상속클래스() 설정을 해야한다.
+### 구현
+
+
+
+
+
+
+
+
+
 
 # python
 ## dic
