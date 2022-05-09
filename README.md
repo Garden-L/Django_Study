@@ -362,7 +362,7 @@ df2.loc[2, 'col3'] = 4.0
 #### keep_equal : 기본적으로 틀린값만 반환하고 맞는 값은 NaN 반환, True로 설정시 맞는 값도 반환
 
 
-```pthon
+```python
 #columns 기준
 df.compare(df2, align_axis = 1, keep_shape = False, keep_equal=False) 
 
