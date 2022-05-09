@@ -316,3 +316,61 @@ print(D.get("name"))
 #출력
 "LJW"
 ```
+
+#Pandas
+
+## 비교
+
+### DataFrame.compare(other, align_axis=1, keep_shape=False, keep_equal=False)
+데이터 프레임과 비교. 단, 데이터 프레임의 행과 열의 수가 같아야 비교가 됨(ValueError)
+
+```python
+#예제 데이터
+df = pd.DataFrame(
+    {
+        "col1": ["a", "a", "b", "b", "a"],
+        "col2": [1.0, 2.0, 3.0, np.nan, 5.0],
+        "col3": [1.0, 2.0, 3.0, 4.0, 5.0]
+    },
+    columns=["col1", "col2", "col3"],
+)
+
+#출력
+col1	col2	col3
+0	a	1.0	1.0
+1	a	2.0	2.0
+2	b	3.0	3.0
+3	b	NaN	4.0
+4	a	5.0	5.0
+
+df2 = df.copy()
+df2.loc[0, 'col1'] = 'c'
+df2.loc[2, 'col3'] = 4.0
+
+#출력
+	col1	col2	col3
+0	c	1.0	1.0
+1	a	2.0	2.0
+2	b	3.0	4.0
+3	b	NaN	4.0
+4	a	5.0	5.0
+```
+
+#### other : DataFrame
+#### align_axis : 0 == "index", 1=="columns", 기준점을 행값으로 할지 열값으로 할지 결정, default="columns"
+#### keep_shape : 테이블의 모양을 비교전과 유지할건지,
+#### keep_equal : 기본적으로 틀린값만 반환하고 맞는 값은 NaN 반환, True로 설정시 맞는 값도 반환
+
+
+```pthon
+#columns 기준
+df.compare(df2, align_axis = 1, keep_shape = False, keep_equal=False) 
+
+#출력
+  col1      	col3
+  self	other	self	other
+0	a	   c	   NaN	NaN
+2	NaN	NaN	3.0	4.0
+```
+
+
