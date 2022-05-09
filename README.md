@@ -296,13 +296,45 @@ AbstractBaseUser를 상속받은 클래스에 objects = BaseUserManager상속클
 ### 구현
 
 
+## URL_dispatcher
+장고에서 URL에 관한 부분을 처리한다.
 
+### URL 처리순서
+Django에서 URL 처리는 urlpatterns 리스트의 작성 순서대로 처리한다.
 
+```python
+urlpatterns = [
+    path('articles/2003/', views.special_case_2003),
+    path('articles/<int:year>/', views.year_archive),
+]
 
+# url : /articles/2003/ 은 첫번째 목록과 일치되기 때문에 special_case_2003으로 연결된다.
+# url : /articles/2004/ 은 두번째 목록과 일치되기 때문에 year_archive 로 연결된다.
+```
+### re_path
+정규표현식으로 url경로를 연결한다. 기본패턴은 re_path(r'^절대경로/(?P<변수명>표현식)/$', ~)이다
+```python
+from django.urls import re_path
 
+urlpatterns = [
+	re_path(r'^articles/(?P<year>[0-9]{4}/(?P<month>[0-9]{2})/$', views.func) #named
+	re_path(r'^articles/([0-9]{4})/$', views.func) #unnamed
+]
+#변수명은 django에서 권장되는 표현이며 unnamed 정규식은 권장되지 않음.
+```
+### 중첩 인수 (Nested arguments)
+중첩인수란 매개변수가 필요 있을 수도 또는 필요없을 수도 있는 것을 의미한다.
+```python
+from django.urls import re_path
 
-
-
+urlpatterns = [
+	re_path(r'^blog/(page-(\d+)/)?$', views.func1), 
+	# blog/page-2 와 blog/ url 둘 views.func1으로 매핑된다.
+	
+	re_path(r'^comments/(?:page-(?P<page_number>\d+)/)?$', views.func2)
+	# commnet/page-2 와 commnet/ url 둘 다 views.func2로 매핑된다.
+]
+```
 
 # python
 ## dic
@@ -373,4 +405,138 @@ df.compare(df2, align_axis = 1, keep_shape = False, keep_equal=False)
 2	NaN	NaN	3.0	4.0
 ```
 
+
+
+# 정규표현식
+
+## re패키지 
+
+### re.match(pattern, string, flags) -> re.Match object 
+문자열의 처음부터 시작하여 패턴이 일치되는 것이 있는지 검사한다. 처음에 일치하지 않으면 None을 반환
+```python
+print(re.match('a', 'aa'))
+print(re.match('a', 'ba'))
+
+#결과
+<re.Match object; span=(0, 1), match='a'>
+None
+```
+
+### re.serach(pattern, string, flags) -> re.Match object
+문자열의 처음부터 시작하여 패턴이 일치되는 것이 있는지 검사한다. 첫 문자가 일치하지 않더라도 상관없음, 중간에 일치해도 된다.
+```python
+print(re.search('a', 'a'))
+print(re.search('a', 'cab '))
+
+#결과
+<re.Match object; span=(0, 1), match='a'>
+<re.Match object; span=(1, 2), match='a'>
+```
+
+
+### re.findall(pattern, string, flags) -> list
+문자열의 처음부터 시작하여 패턴이 일치되는 것이 있는지 검사한다. 일치하는 모든 문자열을 리스트 형태로 반환한다.
+```python
+print(re.findall('a', 'aaaa aaa aa'))
+print(re.findall('a', 'cabbasdba ssasssa '))
+
+#결과
+['a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a']
+['a', 'a', 'a', 'a', 'a']
+```
+
+### re.findall(pattern, string, flags) -> callable_iterator
+문자열의 처음부터 시작하여 패턴이 일치되는 것이 있는지 검사한다. 일치하는 모든 문자열을 반복자 형태로 반환한다, match object를 반복자 형태로 감싼 형태
+```python
+print(re.finditer('a', 'aaaa aaa aa'))
+iter = re.finditer('a', 'aaaa aaa aa')
+for i in iter:
+    print(i)
+print('----------------------')
+print(re.finditer('a', 'cabbasdba ssasssa '))
+iter = re.finditer('a', 'cabbasdba ssasssa ')
+for i in iter:
+    print(i)
+#결과
+<callable_iterator object at 0x000002E4093CEA40>
+<re.Match object; span=(0, 1), match='a'>
+<re.Match object; span=(1, 2), match='a'>
+<re.Match object; span=(2, 3), match='a'>
+<re.Match object; span=(3, 4), match='a'>
+<re.Match object; span=(5, 6), match='a'>
+<re.Match object; span=(6, 7), match='a'>
+<re.Match object; span=(7, 8), match='a'>
+<re.Match object; span=(9, 10), match='a'>
+<re.Match object; span=(10, 11), match='a'>
+----------------------
+<callable_iterator object at 0x000002E4093CEA40>
+<re.Match object; span=(1, 2), match='a'>
+<re.Match object; span=(4, 5), match='a'>
+<re.Match object; span=(8, 9), match='a'>
+<re.Match object; span=(12, 13), match='a'>
+<re.Match object; span=(16, 17), match='a'>
+```
+
+### re.fullmatch(pattern, string, flags) -> match object
+문자열의 처음과 끝이 모두 일치해야 한다.
+```python
+print(re.fullmatch('a', 'aaaa aaa aa'))
+print(re.fullmatch('반드시 일치', '반드시'))
+print(re.fullmatch('반드시 일치', '반드시 일치'))
+
+#출력 
+None
+None
+<re.Match object; span=(0, 6), match='반드시 일치'>
+```
+
+## match object를 활용하는 방법
+
+### re.group()
+일치된 문자열 반환
+```python
+print(re.search('a+', 'aaaaaa').group())
+
+#출력 
+aaaaaa # a+는 a갯수가 1이상인 것인데 search 함수는 최대 길이 하나만을 반환한다.
+```
+
+### re.start()
+일치된 문자열의 시작 위치 반환, 0번 인덱스부터 시작
+```python
+print(re.search('a+', 'aaaaaa').start())
+
+#출력 
+0 
+```
+
+### re.end()
+일치된 문자열의 0번 인덱스 기준으로 마지막 위치 + 1 반환
+```python
+print(re.search('a+', 'aaaaaa').end())
+
+#출력 
+6 # 0번 인덱스 기준 5가 마지막이지만 6을 반환
+```
+
+### re.span()
+(시작위치, 마지막위치) 튜플을 반환
+```python
+print(re.search('a+', 'aaaaaa').span())
+
+#출력 
+(0, 6)
+```
+
+## 메타문자
+```python 
+ ` $ ( ) + . ? { \ ^ {
+```
+메타 문자는 파이썬이 기본적으로 12가지가 있으며, 메타문자는 문자열로 포함시키려면 백슬래시(\)를 붙혀줘야 한다.
+
+### 특수한 상황에서 메타문자
+```python
+ ] - )
+``` 
+평소에는 메타문자가 아니지만 특수한 경우 메타문자가 된다.
 
