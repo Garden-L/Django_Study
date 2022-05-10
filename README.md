@@ -349,6 +349,29 @@ print(D.get("name"))
 "LJW"
 ```
 
+## Class
+## __init__(self, ...)
+파이썬 클래스의 생성자, 인스턴스를 생성할 때 초기 설정 값들을 설정한다.
+
+## __call__(self,...)
+클래스 인스턴스를 함수 처럼 사용할 수 있도록 지원하는 메소드
+```python
+from regex import P
+
+
+class cal:
+    def __init__(self, a):
+        self.a = a
+        
+    def __call__(self, other):
+        return self.a * other
+
+a = cal(10)
+
+print(a.__call__( 10)) # 100 출력 
+print(a(10)) #100출력 __call__ 메소드가 있으므로 cal 클래스의 인스턴스인 a도 함수처럼 사용 가능하다
+```
+
 #Pandas
 
 ## 비교
